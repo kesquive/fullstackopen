@@ -17,22 +17,31 @@ const App = () => {
   
 
   const registerVote = () => {
-    const copy = {...votes}
+    const copy = [...votes]
     copy[selected]+=1
     setVotes(copy)
   }
 
-  const nexAnecdote = () => {
-    const randomNumber = Math.floor(Math.random() * anecdotes.length);
+  const nextAnecdote = () => {
+    const randomNumber = Math.floor(Math.random() * anecdotes.length)
     setSelected(randomNumber)
   }
 
+  const mostVotes = () => votes.indexOf(Math.max(...votes))
+ 
+
   return (
     <div>
+      <h1> Anecdote of the day</h1>
       <p>{anecdotes[selected]}</p>
       <p>has {votes[selected]} votes</p>
       <button onClick={registerVote}>Vote</button>
-      <button onClick={nexAnecdote}>Next anecdote</button>
+      <button onClick={nextAnecdote}>Next anecdote</button>
+
+      <h1> Anecdote with most votes</h1>
+      <p>{anecdotes[mostVotes()]}</p>
+      <p>has {votes[mostVotes()]} votes</p>
+
     </div>
   )
 }
