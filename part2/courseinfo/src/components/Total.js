@@ -1,8 +1,8 @@
 const Total = (props) => {
-    let total = 0
-    props.parts.forEach((part) => {
-      total += part.exercises;
-    })
+    
+    const total = props.parts.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.exercises
+    },0)
   
   
     return (
