@@ -18,9 +18,15 @@ const remove = (id) => {
     .catch((error) => `Error: ${error.message}`);
 };
 
+const update = (changedObject) => {
+  const request = axios.put(`${baseUrl}/${changedObject.id}`, changedObject);
+  return request.then((response) => response.data);
+};
+
 const personService = {
-  getAll: getAll,
-  create: create,
-  remove: remove,
+  getAll,
+  create,
+  remove,
+  update,
 };
 export default personService;
