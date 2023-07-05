@@ -39,6 +39,16 @@ const App = () => {
     }
   };
 
+  const deletePerson = (id) => {
+    if (window.confirm("Are you sure?")) {
+      personService.remove(id).then((response) => {
+        alert(response);
+      });
+
+      setPersons(persons.filter((p) => p.id !== id));
+    }
+  };
+
   const handleNameChange = (event) => {
     setNewName(event.target.value);
   };
@@ -70,7 +80,7 @@ const App = () => {
       />
 
       <h2>Numbers</h2>
-      <Persons persons={personToShow} />
+      <Persons persons={personToShow} deletePerson={deletePerson} />
     </div>
   );
 };
