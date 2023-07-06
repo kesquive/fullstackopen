@@ -93,9 +93,27 @@ const App = () => {
 
   const deletePerson = (id) => {
     if (window.confirm("Are you sure?")) {
-      personService.remove(id).then((response) => {
-        alert(response);
-      });
+      const deletedPerson = persons.filter((p) => p.id === id);
+      personService
+        .remove(id)
+        .then(() => {
+          setNotificationMessage({
+            type: "success",
+            message: `${deletedPerson[0].name} was deleted.`,
+          });
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 5000);
+        })
+        .catch((error) => {
+          setNotificationMessage({
+            type: "error",
+            message: `Informaton ${deletedPerson[0].name} of has already been removed from server.`,
+          });
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 5000);
+        });
 
       setPersons(persons.filter((p) => p.id !== id));
     }
