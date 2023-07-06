@@ -33,13 +33,31 @@ const App = () => {
       ) {
         const person = persons.find((p) => p.name === newName);
         const changedPerson = { ...person, number: newNumber };
-        personService.update(changedPerson).then((returnedPerson) => {
-          setPersons(
-            persons.map((p) => (p.name !== newName ? p : returnedPerson))
-          );
-          setNewName("");
-          setNewNumber("");
-        });
+        personService
+          .update(changedPerson)
+          .then((returnedPerson) => {
+            setPersons(
+              persons.map((p) => (p.name !== newName ? p : returnedPerson))
+            );
+            setNotificationMessage({
+              type: "success",
+              message: `${returnedPerson.name}'s number was updated.`,
+            });
+            setTimeout(() => {
+              setNotificationMessage(null);
+            }, 5000);
+            setNewName("");
+            setNewNumber("");
+          })
+          .catch((error) => {
+            setNotificationMessage({
+              type: "error",
+              message: "not implemented yet",
+            });
+            setTimeout(() => {
+              setNotificationMessage(null);
+            }, 5000);
+          });
       }
     } else {
       const personObject = {
