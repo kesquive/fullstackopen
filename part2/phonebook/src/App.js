@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Persons from "./components/Persons";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
+import Notification from "./components/Notification";
 import personService from "./services/persons";
 
 const App = () => {
@@ -9,6 +10,7 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState(null);
 
   useEffect(() => {
     personService.getAll().then((initialPersons) => {
@@ -45,11 +47,29 @@ const App = () => {
         number: newNumber,
       };
 
-      personService.create(personObject).then((returnedPerson) => {
-        setPersons(persons.concat(returnedPerson));
-        setNewName("");
-        setNewNumber("");
-      });
+      personService
+        .create(personObject)
+        .then((returnedPerson) => {
+          setPersons(persons.concat(returnedPerson));
+          setNotificationMessage({
+            type: "success",
+            message: `Added ${returnedPerson.name}`,
+          });
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 5000);
+          setNewName("");
+          setNewNumber("");
+        })
+        .catch((error) => {
+          setNotificationMessage({
+            type: "error",
+            message: "not implemented yet",
+          });
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 5000);
+        });
     }
   };
 
@@ -81,10 +101,11 @@ const App = () => {
 
   return (
     <div>
-      <h2>Phonebook</h2>
+      <h1>Phonebook</h1>
       <Filter filter={filter} handleFilter={handleFilter} />
 
       <h2>Add a new</h2>
+      <Notification notification={notificationMessage} />
       <PersonForm
         submit={addPerson}
         name={newName}
