@@ -1,7 +1,23 @@
-import React from "react";
+import { React, useState } from "react";
 
 const Country = ({ country }) => {
-  return <li>{country.name.common}</li>;
+  const [show, setShow] = useState(false);
+
+  const handleShowButton = (event) => {
+    setShow(!show);
+  };
+
+  return (
+    <div>
+      <li>
+        {country.name.common}
+        <button onClick={handleShowButton}> {show ? "Hide" : "Show"} </button>
+      </li>
+      {show ? (
+        <CountryInfo key={country.name.common} country={country} />
+      ) : null}
+    </div>
+  );
 };
 
 const CountryInfo = ({ country }) => {
