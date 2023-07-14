@@ -25,6 +25,12 @@ let persons = [
   },
 ];
 
+const generateId = () => {
+  min = Math.ceil(1000);
+  max = Math.floor(10000);
+  return Math.floor(Math.random() * (max - min) + min);
+};
+
 app.get("/", (request, response) => {
   response.send("<h1>PhoneBook</h1>");
 });
@@ -58,6 +64,20 @@ app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
   persons = persons.filter((person) => person.id !== id);
   response.status(204).end();
+});
+
+app.post("/api/persons", (request, response) => {
+  const body = request.body;
+
+  const person = {
+    id: generateId(),
+    name: body.name,
+    number: body.number,
+  };
+
+  persons = persons.concat(person);
+
+  response.json(person);
 });
 
 const PORT = 3001;
