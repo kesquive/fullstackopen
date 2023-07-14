@@ -1,6 +1,16 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
+
+// MIDDLEWARE - BEFORE
+
 app.use(express.json());
+
+morgan.token("body", (req) => {
+  return JSON.stringify(req.body);
+});
+
+app.use(morgan(":method :url :status :total-time[2] :body"));
 
 let persons = [
   {
@@ -25,11 +35,14 @@ let persons = [
   },
 ];
 
+// HELPERS //
 const generateId = () => {
   min = Math.ceil(1000);
   max = Math.floor(10000);
   return Math.floor(Math.random() * (max - min) + min);
 };
+
+// ROUTES //
 
 app.get("/", (request, response) => {
   response.send("<h1>PhoneBook</h1>");
@@ -93,5 +106,12 @@ app.post("/api/persons", (request, response) => {
   response.json(person);
 });
 
+const unknownEndPoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unknownEndPoint);
+
+// SERVER
 const PORT = 3001;
 app.listen(PORT);
