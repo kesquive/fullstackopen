@@ -29,6 +29,15 @@ app.get("/", (request, response) => {
   response.send("<h1>PhoneBook</h1>");
 });
 
+app.get("/info", (request, response) => {
+  const currentPersons = persons.length;
+  const timeRequest = new Date(new Date().toUTCString());
+  const info = `<p> Phonebook has info for ${currentPersons} people </p>\
+  <p> ${timeRequest} </p>`;
+
+  response.send(info);
+});
+
 app.get("/api/persons", (request, response) => {
   response.json(persons);
 });
