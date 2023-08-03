@@ -11,13 +11,17 @@ app.use(express.json());
 
 app.use(express.static("build"));
 
+// DB
+require("dotenv").config();
+const Person = require("./models/person");
+
 morgan.token("body", (req) => {
   return JSON.stringify(req.body);
 });
 
 app.use(morgan(":method :url :status :total-time[2] :body"));
 
-let persons = [
+let personsArray = [
   {
     id: 1,
     name: "Arto Hellas",
@@ -54,7 +58,7 @@ app.get("/", (request, response) => {
 });
 
 app.get("/info", (request, response) => {
-  const currentPersons = persons.length;
+  const currentPersons = personsArray.length;
   const timeRequest = new Date(new Date().toUTCString());
   const info = `<p> Phonebook has info for ${currentPersons} people </p>\
   <p> ${timeRequest} </p>`;
@@ -63,12 +67,15 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  //response.json(personsArray);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
+  const person = personsArray.find((person) => person.id === id);
 
   if (person) {
     response.json(person);
@@ -80,7 +87,7 @@ app.get("/api/persons/:id", (request, response) => {
 
 app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
-  persons = persons.filter((person) => person.id !== id);
+  persons = personsArray.filter((person) => person.id !== id);
   response.status(204).end();
 });
 
@@ -93,7 +100,7 @@ app.post("/api/persons", (request, response) => {
     });
   }
 
-  const existPerson = persons.find((person) => person.name === body.name);
+  const existPerson = personsArray.find((person) => person.name === body.name);
 
   if (existPerson) {
     return response.status(400).json({
@@ -106,7 +113,7 @@ app.post("/api/persons", (request, response) => {
     number: body.number,
   };
 
-  persons = persons.concat(person);
+  persons = personsArray.concat(person);
 
   response.json(person);
 });
