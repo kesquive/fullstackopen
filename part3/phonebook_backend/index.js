@@ -86,9 +86,12 @@ app.get("/api/persons/:id", (request, response) => {
 });
 
 app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
+  /*const id = Number(request.params.id);
   persons = personsArray.filter((person) => person.id !== id);
-  response.status(204).end();
+  response.status(204).end();*/
+  Person.findByIdAndRemove(request.params.id).then(() => {
+    response.status(204).end();
+  });
 });
 
 app.post("/api/persons", (request, response) => {
@@ -100,6 +103,7 @@ app.post("/api/persons", (request, response) => {
     });
   }
 
+  /*
   const existPerson = personsArray.find((person) => person.name === body.name);
 
   if (existPerson) {
@@ -114,8 +118,17 @@ app.post("/api/persons", (request, response) => {
   };
 
   persons = personsArray.concat(person);
-
   response.json(person);
+  */
+
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  });
+
+  person.save().then((result) => {
+    response.json(result);
+  });
 });
 
 const unknownEndPoint = (request, response) => {
