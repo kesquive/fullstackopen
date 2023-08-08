@@ -44,13 +44,6 @@ let personsArray = [
   },
 ];
 
-// HELPERS //
-const generateId = () => {
-  min = Math.ceil(1000);
-  max = Math.floor(10000);
-  return Math.floor(Math.random() * (max - min) + min);
-};
-
 // ROUTES //
 
 app.get("/", (request, response) => {
@@ -67,34 +60,32 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons", (request, response) => {
-  //response.json(personsArray);
   Person.find({}).then((persons) => {
     response.json(persons);
   });
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = personsArray.find((person) => person.id === id);
-
-  if (person) {
-    response.json(person);
-  } else {
-    response.statusMessage = "Person dont found";
-    response.status(404).end();
-  }
+app.get("/api/persons/:id", (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  /*const id = Number(request.params.id);
-  persons = personsArray.filter((person) => person.id !== id);
-  response.status(204).end();*/
-  Person.findByIdAndRemove(request.params.id).then(() => {
-    response.status(204).end();
-  });
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -103,32 +94,17 @@ app.post("/api/persons", (request, response) => {
     });
   }
 
-  /*
-  const existPerson = personsArray.find((person) => person.name === body.name);
-
-  if (existPerson) {
-    return response.status(400).json({
-      error: "Name must be unique",
-    });
-  }
-  const person = {
-    id: generateId(),
-    name: body.name,
-    number: body.number,
-  };
-
-  persons = personsArray.concat(person);
-  response.json(person);
-  */
-
   const person = new Person({
     name: body.name,
     number: body.number,
   });
 
-  person.save().then((result) => {
-    response.json(result);
-  });
+  person
+    .save()
+    .then((result) => {
+      response.json(result);
+    })
+    .catch((error) => next(error));
 });
 
 const unknownEndPoint = (request, response) => {
@@ -136,6 +112,19 @@ const unknownEndPoint = (request, response) => {
 };
 
 app.use(unknownEndPoint);
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 // SERVER
 const PORT = process.env.PORT || 3001;
