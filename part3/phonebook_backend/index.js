@@ -50,8 +50,8 @@ app.get("/", (request, response) => {
   response.send("<h1>PhoneBook</h1>");
 });
 
-app.get("/info", (request, response) => {
-  const currentPersons = personsArray.length;
+app.get("/info", async (request, response) => {
+  const currentPersons = await Person.countDocuments();
   const timeRequest = new Date(new Date().toUTCString());
   const info = `<p> Phonebook has info for ${currentPersons} people </p>\
   <p> ${timeRequest} </p>`;
