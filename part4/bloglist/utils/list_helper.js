@@ -29,8 +29,40 @@ const favoriteBlog = (blogs) => {
   return favorite;
 };
 
+const mostBlogs = (blogs) => {
+  const authorCounts = blogs.reduce((authorCount, blog) => {
+    authorCount[blog.author] = (authorCount[blog.author] || 0) + 1;
+    return authorCount;
+  }, {});
+  let maxCount = Math.max(...Object.values(authorCounts));
+  let mostFrequent = Object.keys(authorCounts).filter(
+    (author) => authorCounts[author] === maxCount
+  );
+  return {
+    author: mostFrequent[0],
+    blogs: maxCount,
+  };
+};
+
+const mostLikes = (blogs) => {
+  const authorCounts = blogs.reduce((authorCount, blog) => {
+    authorCount[blog.author] = (authorCount[blog.author] || 0) + blog.likes;
+    return authorCount;
+  }, {});
+  let maxLikes = Math.max(...Object.values(authorCounts));
+  let mostLikes = Object.keys(authorCounts).filter(
+    (author) => authorCounts[author] === maxLikes
+  );
+  return {
+    author: mostLikes[0],
+    likes: maxLikes,
+  };
+};
+
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
+  mostBlogs,
+  mostLikes,
 };

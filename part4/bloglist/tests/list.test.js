@@ -62,8 +62,9 @@ describe("total likes", () => {
   ];
 
   test("when list has only one blog, equals the likes of that", () => {
-    const result = listHelper.totalLikes(listWithOneBlog);
-    expect(result).toBe(36);
+    const blog = listWithOneBlog[0];
+    const result = listHelper.totalLikes([blog]);
+    expect(result).toBe(blog.likes);
   });
   test("the blog with most likes", () => {
     const result = listHelper.favoriteBlog(listWithOneBlog);
@@ -71,6 +72,20 @@ describe("total likes", () => {
       title: "Canonical string reduction",
       author: "Edsger W. Dijkstra",
       likes: 12,
+    });
+  });
+  test("author with most blogs", () => {
+    const result = listHelper.mostBlogs(listWithOneBlog);
+    expect(result).toEqual({
+      author: "Robert C. Martin",
+      blogs: 3,
+    });
+  });
+  test("author with most likes", () => {
+    const result = listHelper.mostLikes(listWithOneBlog);
+    expect(result).toEqual({
+      author: "Edsger W. Dijkstra",
+      likes: 17,
     });
   });
 });
