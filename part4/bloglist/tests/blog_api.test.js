@@ -44,6 +44,24 @@ test("successfully create a new blog post", async () => {
   expect(contents).toContain("Hello America");
 });
 
+test.only("validate default value for property likes", async () => {
+  const newBlog = {
+    title: "Hello w/h likes",
+    author: "None",
+    url: "none.com/blog",
+  };
+
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const blogsAtEnd = await helper.blogsInDb();
+
+  expect(blogsAtEnd[blogsAtEnd.length - 1].likes).toEqual(0);
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });
