@@ -44,7 +44,7 @@ test("successfully create a new blog post", async () => {
   expect(contents).toContain("Hello America");
 });
 
-test.only("validate default value for property likes", async () => {
+test("validate default value for property likes", async () => {
   const newBlog = {
     title: "Hello w/h likes",
     author: "None",
@@ -60,6 +60,14 @@ test.only("validate default value for property likes", async () => {
   const blogsAtEnd = await helper.blogsInDb();
 
   expect(blogsAtEnd[blogsAtEnd.length - 1].likes).toEqual(0);
+});
+
+test("validate missing value for title and url", async () => {
+  const newBlog = {
+    author: "Just me",
+  };
+
+  await api.post("/api/blogs").send(newBlog).expect(400);
 });
 
 afterAll(async () => {
