@@ -70,6 +70,21 @@ test("validate missing value for title and url", async () => {
   await api.post("/api/blogs").send(newBlog).expect(400);
 });
 
+test("succeeds to delete a blog", async () => {
+  const blogAtStart = await helper.blogsInDb();
+  const blogToDelete = blogAtStart[0];
+
+  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+  const blogAtEnd = await helper.blogsInDb();
+
+  expect(blogAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+
+  const contents = blogAtEnd.map((r) => r.title);
+
+  expect(contents).not.toContain(blogToDelete.title);
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });
