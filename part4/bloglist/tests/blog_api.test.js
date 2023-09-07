@@ -85,6 +85,18 @@ test("succeeds to delete a blog", async () => {
   expect(contents).not.toContain(blogToDelete.title);
 });
 
+test("update title of a blog", async () => {
+  const blogAtStart = await helper.blogsInDb();
+  const blogToUpdate = blogAtStart[0];
+  blogToUpdate.likes = 50;
+
+  await api.put(`/api/blogs/${blogToUpdate.id}`).send(blogToUpdate).expect(200);
+
+  const blogsAtEnd = await helper.blogsInDb();
+  const blogUpdated = blogsAtEnd[0];
+  expect(blogUpdated.likes).toEqual(50);
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });
