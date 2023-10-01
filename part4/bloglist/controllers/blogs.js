@@ -1,7 +1,5 @@
 const blogsRouter = require("express").Router();
-const jwt = require("jsonwebtoken");
 const Blog = require("../models/blog");
-const User = require("../models/user");
 
 blogsRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
@@ -12,12 +10,11 @@ blogsRouter.post("/", async (request, response, next) => {
   const body = request.body;
 
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET);
+    const user = request.user;
 
-    if (!decodedToken.id) {
-      return response.status(401).json({ error: "invalid token" });
+    if (!user) {
+      return response.status(401).json({ erro: "invalid token" });
     }
-    const user = await User.findById(decodedToken.id);
 
     const blog = new Blog({
       title: body.title,
@@ -40,15 +37,15 @@ blogsRouter.post("/", async (request, response, next) => {
 
 blogsRouter.delete("/:id", async (request, response, next) => {
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET);
+    const user = request.user;
 
-    if (!decodedToken.id) {
-      return response.status(401).json({ error: "invalid token" });
+    if (!user) {
+      return response.status(401).json({ erro: "invalid token" });
     }
 
     const blog = await Blog.findById(request.params.id);
 
-    if (blog.user.toString() === decodedToken.id.toString()) {
+    if (blog.user.toString() === user.id.toString()) {
       await Blog.findByIdAndRemove(request.params.id);
       response.status(204).end();
     } else {
@@ -62,14 +59,13 @@ blogsRouter.delete("/:id", async (request, response, next) => {
 blogsRouter.put("/:id", async (request, response, next) => {
   const body = request.body;
 
-  const blog = {
-    title: body.title,
-    author: body.author,
-    url: body.url,
-    likes: body.likes,
-  };
-
   try {
+    const blog = {
+      title: body.title,
+      author: body.author,
+      url: body.url,
+      likes: body.likes || 0,
+    };
     const updatedNote = await Blog.findByIdAndUpdate(request.params.id, blog, {
       new: true,
     });

@@ -8,8 +8,36 @@ const Blog = require("../models/blog");
 const User = require("../models/user");
 
 beforeEach(async () => {
+  await User.deleteMany({});
+  const passwordHash = await bcrypt.hash("admin", 10);
+  const user = new User({
+    username: "admin",
+    name: "admin",
+    passwordHash,
+  });
+
+  newUser = await user.save();
+
   await Blog.deleteMany({});
-  await Blog.insertMany(helper.initialBlogs);
+
+  const blogObject = helper.initialBlogs.map(
+    (blog) =>
+      new Blog({
+        title: blog.title,
+        author: blog.author,
+        url: blog.url,
+        user: newUser._id.toString(),
+        likes: blog.likes ? blog.likes : 0,
+      })
+  );
+
+  const promiseArray = blogObject.map((blog) => {
+    blog.save();
+    newUser.blogs = newUser.blogs.concat(blog._id);
+  });
+
+  await Promise.all(promiseArray);
+  await newUser.save();
 });
 
 test("all blogs are returned as json", async () => {
@@ -25,78 +53,118 @@ test("blog has a property named id", async () => {
   expect(response.body[0].id).toBeDefined();
 });
 
-test("successfully create a new blog post", async () => {
-  const newBlog = {
-    title: "Hello America",
-    author: "Peter",
-    url: "peter.com/blog",
-    likes: 3,
-  };
+describe("CRUD operations for Blogs", () => {
+  let headers;
 
-  await api
-    .post("/api/blogs")
-    .send(newBlog)
-    .expect(201)
-    .expect("Content-Type", /application\/json/);
+  beforeEach(async () => {
+    const user = {
+      username: "admin",
+      password: "admin",
+    };
 
-  const blogsAtEnd = await helper.blogsInDb();
-  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
+    const loginUser = await api.post("/api/login").send(user);
 
-  const contents = blogsAtEnd.map((n) => n.title);
-  expect(contents).toContain("Hello America");
-});
+    headers = {
+      Authorization: `Bearer ${loginUser.body.token}`,
+    };
+  });
 
-test("validate default value for property likes", async () => {
-  const newBlog = {
-    title: "Hello w/h likes",
-    author: "None",
-    url: "none.com/blog",
-  };
+  test("successfully create a new blog post", async () => {
+    const newBlog = {
+      title: "Hello America",
+      author: "Peter",
+      url: "peter.com/blog",
+      likes: 3,
+    };
 
-  await api
-    .post("/api/blogs")
-    .send(newBlog)
-    .expect(201)
-    .expect("Content-Type", /application\/json/);
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set(headers)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
 
-  const blogsAtEnd = await helper.blogsInDb();
+    const blogsAtEnd = await helper.blogsInDb();
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
 
-  expect(blogsAtEnd[blogsAtEnd.length - 1].likes).toEqual(0);
-});
+    const contents = blogsAtEnd.map((n) => n.title);
+    expect(contents).toContain("Hello America");
+  });
 
-test("validate missing value for title and url", async () => {
-  const newBlog = {
-    author: "Just me",
-  };
+  test("unauthorized for create a new blog post", async () => {
+    const newBlog = {
+      title: "Hello America",
+      author: "Peter",
+      url: "peter.com/blog",
+      likes: 3,
+    };
 
-  await api.post("/api/blogs").send(newBlog).expect(400);
-});
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .expect(401)
+      .expect("Content-Type", /application\/json/);
 
-test("succeeds to delete a blog", async () => {
-  const blogAtStart = await helper.blogsInDb();
-  const blogToDelete = blogAtStart[0];
+    const blogsAtEnd = await helper.blogsInDb();
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
+  });
 
-  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+  test("validate default value for property likes", async () => {
+    const newBlog = {
+      title: "Hello w/h likes",
+      author: "None",
+      url: "none.com/blog",
+    };
 
-  const blogAtEnd = await helper.blogsInDb();
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set(headers)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
 
-  expect(blogAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+    const blogsAtEnd = await helper.blogsInDb();
 
-  const contents = blogAtEnd.map((r) => r.title);
+    expect(blogsAtEnd[blogsAtEnd.length - 1].likes).toEqual(0);
+  });
 
-  expect(contents).not.toContain(blogToDelete.title);
-});
+  test("validate missing value for title and url", async () => {
+    const newBlog = {
+      author: "Just me",
+    };
 
-test("update title of a blog", async () => {
-  const blogAtStart = await helper.blogsInDb();
-  const blogToUpdate = blogAtStart[0];
-  blogToUpdate.likes = 50;
+    await api.post("/api/blogs").set(headers).send(newBlog).expect(400);
+  });
 
-  await api.put(`/api/blogs/${blogToUpdate.id}`).send(blogToUpdate).expect(200);
+  test("succeeds to delete a blog", async () => {
+    const blogAtStart = await helper.blogsInDb();
+    const blogToDelete = blogAtStart[0];
 
-  const blogsAtEnd = await helper.blogsInDb();
-  const blogUpdated = blogsAtEnd[0];
-  expect(blogUpdated.likes).toEqual(50);
+    await api.delete(`/api/blogs/${blogToDelete.id}`).set(headers).expect(204);
+
+    const blogAtEnd = await helper.blogsInDb();
+
+    expect(blogAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+
+    const contents = blogAtEnd.map((r) => r.title);
+
+    expect(contents).not.toContain(blogToDelete.title);
+  });
+
+  test("update title of a blog", async () => {
+    const blogAtStart = await helper.blogsInDb();
+    const blogToUpdate = blogAtStart[0];
+    blogToUpdate.likes = 50;
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(blogToUpdate)
+      .expect(200);
+
+    const blogsAtEnd = await helper.blogsInDb();
+    const blogUpdated = blogsAtEnd[0];
+    expect(blogUpdated.likes).toEqual(50);
+  });
 });
 
 describe("when there is initially one user in db", () => {
