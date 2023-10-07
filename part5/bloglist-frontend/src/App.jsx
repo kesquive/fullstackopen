@@ -10,6 +10,10 @@ const App = () => {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
 
+  const [newBlogTitle, setBlogtitle] = useState("");
+  const [newBlogAuthor, setBlogAuthor] = useState("");
+  const [newBlogUrl, setBlogUrl] = useState("");
+
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem("loggedUser");
     if (loggedUserJSON) {
@@ -23,6 +27,34 @@ const App = () => {
   const getBlogs = async () => {
     const blogs = await blogService.getAll();
     setBlogs(blogs);
+  };
+
+  const addBlog = async (event) => {
+    event.preventDefault();
+
+    const newblog = {
+      author: newBlogAuthor,
+      title: newBlogTitle,
+      url: newBlogUrl,
+    };
+
+    const blog = await blogService.create(newblog);
+    setBlogs(blogs.concat(blog));
+    setBlogAuthor("");
+    setBlogUrl("");
+    setBlogtitle("");
+  };
+
+  const handleTitleChange = (event) => {
+    setBlogtitle(event.target.value);
+  };
+
+  const handleAuthorChange = (event) => {
+    setBlogAuthor(event.target.value);
+  };
+
+  const handleUrlChange = (event) => {
+    setBlogUrl(event.target.value);
   };
 
   const handleLogin = async (event) => {
@@ -48,11 +80,6 @@ const App = () => {
     setUser(null);
   };
 
-  const logoutForm = () => {
-    <form onSubmit={handleLogout}>
-      <button type="submit">Logout</button>
-    </form>;
-  };
   const loginForm = () => (
     <form onSubmit={handleLogin}>
       Log in to application
@@ -80,7 +107,7 @@ const App = () => {
 
   const blogList = () => (
     <div>
-      <h2>blogs</h2>
+      <h2>Blogs</h2>
       <p>
         {user.name} logged in{" "}
         <button onClick={handleLogout} type="submit">
@@ -93,10 +120,21 @@ const App = () => {
     </div>
   );
 
+  const blogForm = () => (
+    <form onSubmit={addBlog}>
+      <h2>Create new</h2>
+      Title <input value={newBlogTitle} onChange={handleTitleChange} />
+      Author <input value={newBlogAuthor} onChange={handleAuthorChange} />
+      Url <input value={newBlogUrl} onChange={handleUrlChange} />
+      <button type="submit">create</button>
+    </form>
+  );
+
   return (
     <div>
       {!user && loginForm()}
-      {user && <div>{blogList()}</div>}
+      {user && blogList()}
+      {user && blogForm()}
     </div>
   );
 };
