@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
@@ -32,17 +33,36 @@ const App = () => {
   const addBlog = async (event) => {
     event.preventDefault();
 
-    const newblog = {
-      author: newBlogAuthor,
-      title: newBlogTitle,
-      url: newBlogUrl,
-    };
+    try {
+      const newblog = {
+        author: newBlogAuthor,
+        title: newBlogTitle,
+        url: newBlogUrl,
+      };
 
-    const blog = await blogService.create(newblog);
-    setBlogs(blogs.concat(blog));
-    setBlogAuthor("");
-    setBlogUrl("");
-    setBlogtitle("");
+      const blog = await blogService.create(newblog);
+      setBlogs(blogs.concat(blog));
+
+      setNotification({
+        type: "success",
+        message: `a new blog ${newBlogTitle} by ${newBlogAuthor} added.`,
+      });
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+
+      setBlogAuthor("");
+      setBlogUrl("");
+      setBlogtitle("");
+    } catch (exception) {
+      setNotification({
+        type: "error",
+        message: `error ${exception}.`,
+      });
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+    }
   };
 
   const handleTitleChange = (event) => {
@@ -67,9 +87,12 @@ const App = () => {
       setUsername("");
       setPassword("");
     } catch (exception) {
-      setErrorMessage("Wrong credentials");
+      setNotification({
+        type: "error",
+        message: `wrong username or password.`,
+      });
       setTimeout(() => {
-        setErrorMessage(null);
+        setNotification(null);
       }, 5000);
     }
   };
@@ -132,6 +155,7 @@ const App = () => {
 
   return (
     <div>
+      <Notification notification={notification} />
       {!user && loginForm()}
       {user && blogList()}
       {user && blogForm()}
