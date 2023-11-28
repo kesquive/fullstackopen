@@ -14,10 +14,18 @@ const Anecdote = ({ anecdote, handleClick }) => {
 };
 
 const AnecdoteList = (props) => {
-  const anecdotes = useSelector((state) => {
-    return [...state].sort((a, b) => {
-      return b.votes - a.votes;
-    });
+  const anecdotes = useSelector(({ filter, anecdotes }) => {
+    if (filter === "ALL") {
+      return anecdotes.sort((a, b) => {
+        return b.votes - a.votes;
+      });
+    } else {
+      return anecdotes
+        .filter((anecdote) => anecdote.content.includes(filter))
+        .sort((a, b) => {
+          return b.votes - a.votes;
+        });
+    }
   });
   const dispatch = useDispatch();
 
